@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUPER SIXERS</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#071225;color:#fff;
+ font-family:Arial,sans-serif;
+}
+header{
+ text-align:center;padding:30px 12px;
+ background:linear-gradient(135deg,#101e38,#172c4d);
+ border-bottom:2px solid #d9ae45;
+}
+h1{color:#f4c75e;letter-spacing:3px}
+.gold{color:#f4c75e}
+main{max-width:850px;margin:auto;padding:18px}
+.card{
+ background:#12223b;border:1px solid #92712d;
+ border-radius:14px;padding:18px;margin:16px 0;
+}
+input,button{
+ padding:13px;border-radius:8px;border:0;
+ font-size:16px;margin:5px 0;
+}
+input{width:100%;background:#edf1f8;color:#111}
+button{
+ background:#d9ae45;color:#101b2e;
+ font-weight:bold;cursor:pointer;
+}
+button:disabled{opacity:.5}
+.member{
+ display:inline-block;background:#203858;
+ padding:12px;border-radius:9px;margin:5px;
+ border:1px solid #d9ae45;
+}
+.comic{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.panel{
+ background:#203858;border:1px solid #d9ae45;
+ border-radius:10px;padding:16px;text-align:center;
+ min-height:130px;display:flex;flex-direction:column;
+ justify-content:center;
+}
+.big{font-size:30px}
+#app{display:none}
+#status{color:#f4c75e;min-height:22px}
+#gallery img{max-width:100%;border-radius:10px}
+.item{background:#203858;padding:12px;margin:9px 0;border-radius:10px}
+footer{text-align:center;color:#b8c2d4;padding:25px}
+@media(max-width:520px){
+ .comic{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="gold">★ THE OFFICIAL BROTHERHOOD ★</div>
+ <h1>SUPER SIXERS</h1>
+ <p>Six Friends. One Brotherhood.</p>
+</header>
+
+<main>
+<section id="login" class="card">
+ <h2 class="gold">Member Login</h2>
+ <p>Welcome to the Sixers' private space.</p>
+ <label for="username">Choose your username</label>
+ <select id="username" style="width:100%;padding:13px;border-radius:8px">
+  <option>Miracle</option>
+  <option>Melvin</option>
+  <option>Chris</option>
+  <option>Curtis</option>
+  <option>Rayan</option>
+  <option>Harsith</option>
+ </select>
+ <label for="invite">Common invite code</label>
+ <input id="invite" type="password" placeholder="Enter invite code">
+ <button id="loginBtn" onclick="login()">ENTER THE SIXERS</button>
+ <p id="status"></p>
+</section>
+
+<section id="app">
+ <div class="card">
+  <h2 class="gold">Welcome, <span id="welcome"></span>!</h2>
+  <p>Six friends. One family. Always together.</p>
+  <button onclick="logout()">LOG OUT</button>
+ </div>
+
+ <div class="card">
+  <h2 class="gold">The Six Members</h2>
+  <div class="member">👑 Miracle<br><small>The God Boy – Trying to Be</small></div>
+  <div class="member">⭐ Melvin<br><small>Chief Minister</small></div>
+  <div class="member">🏆 Chris<br><small>President</small></div>
+  <div class="member">🛡️ Curtis<br><small>Vice President</small></div>
+  <div class="member">🤝 Rayan<br><small>The Best Friend to Everyone</small></div>
+  <div class="member">💙 Harsith<br><small>The Good Boy</small></div>
+ </div>
+
+ <div class="card">
+  <h2 class="gold">The Brotherhood Comic</h2>
+  <div class="comic">
+   <div class="panel">
+    <div class="big">👬👬👬</div>
+    <b>Six friends!</b>
+    <p>One brotherhood!</p>
+   </div>
+   <div class="panel">
+    <div class="big">🤝💙</div>
+    <b>Always helping</b>
+    <p>We've got your back!</p>
+   </div>
+   <div class="panel">
+    <div class="big">✊⭐</div>
+    <b>United forever</b>
+    <p>SUPER SIXERS!</p>
+   </div>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2 class="gold">Emoji & GIF Gallery</h2>
+  <p>Share an emoji or a GIF link with the group.</p>
+  <div>
+   <button onclick="choose('😂')">😂</button>
+   <button onclick="choose('❤️')">❤️</button>
+   <button onclick="choose('🔥')">🔥</button>
+   <button onclick="choose('⚽')">⚽</button>
+   <button onclick="choose('🏎️')">🏎️</button>
+   <button onclick="choose('👑')">👑</button>
+  </div>
+  <input id="post" placeholder="Paste a GIF image link here">
+  <button onclick="share()">SHARE</button>
+  <p id="shareStatus"></p>
+  <div id="gallery"></div>
+ </div>
+</section>
+</main>
+<footer>SUPER SIXERS © 2026 · ALWAYS TOGETHER</footer>
+
+<script>
+let token=sessionStorage.getItem("sixersToken");
+let member=sessionStorage.getItem("sixersMember");
+
+function showApp(){
+ if(token && member){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("welcome").textContent=member;
+  loadGallery();
+ }
+}
+async function login(){
+ const username=document.getElementById("username").value;
+ const inviteCode=document.getElementById("invite").value;
+ const status=document.getElementById("status");
+ status.textContent="Checking...";
+ try{
+  const r=await fetch("/.netlify/functions/auth",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({username,inviteCode})
+  });
+  const d=await r.json();
+  if(!r.ok)throw Error(d.error||"Login failed");
+  token=d.token;member=username;
+  sessionStorage.setItem("sixersToken",token);
+  sessionStorage.setItem("sixersMember",member);
+  showApp();
+ }catch(e){status.textContent=e.message==="Failed to fetch"?"Server setup is not finished yet.":"Login failed: "+e.message}
+}
+function logout(){
+ sessionStorage.clear();location.reload();
+}
+function choose(e){document.getElementById("post").value=e}
+async function share(){
+ const value=document.getElementById("post").value.trim();
+ if(!value)return;
+ if(!token){alert("Please log in again.");return}
+ try{
+  const r=await fetch("/.netlify/functions/items",{
+   method:"POST",
+   headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+   body:JSON.stringify({content:value})
+  });
+  const d=await r.json();
+  if(!r.ok)throw Error(d.error||"Could not share");
+  document.getElementById("post").value="";
+  document.getElementById("shareStatus").textContent="Shared!";
+  loadGallery();
+ }catch(e){document.getElementById("shareStatus").textContent=e.message}
+}
+async function loadGallery(){
+ try{
+  const r=await fetch("/.netlify/functions/items",{
+   headers:{"Authorization":"Bearer "+token}
+  });
+  if(!r.ok)return;
+  const d=await r.json();
+  const gallery=document.getElementById("gallery");
+  gallery.innerHTML="";
+  (d.items||[]).forEach(item=>{
+   const div=document.createElement("div");
+   div.className="item";
+   const who=document.createElement("b");
+   who.textContent=item.username+" ";
+   const content=document.createElement("div");
+   if(/^https:\/\/.+\.(gif|png|jpg|jpeg|webp)(\?.*)?$/i.test(item.content)){
+    const img=document.createElement("img");
+    img.src=item.content;img.alt="Shared GIF";
+    content.appendChild(img);
+   }else content.textContent=item.content;
+   div.append(who,content);
+   gallery.appendChild(div);
+  });
+ }catch(e){}
+}
+showApp();
+</script>
+</body>
+</html>
